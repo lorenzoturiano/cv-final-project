@@ -49,6 +49,29 @@ def preprocess_image(image_path, target_size=256):
     
     return img_array
 
+def preprocess_mask(mask_path, target_size=256):
+    """Load and preprocess image to grayscale tensor"""
+    # Load image
+    if mask_path:
+        img = Image.open(mask_path).convert('L')  # Convert to grayscale
+        img = img.resize((target_size, target_size))
+        img_array = np.array(img) / 255.0  # Normalize to [0, 1]
+        img_array = 1.0 - img_array
+    else:
+        # Create a sample gradient image if no image provided
+        img_array = np.zeros((target_size, target_size), dtype=np.float32)
+        for i in range(target_size):
+            for j in range(target_size):
+                img_array[i, j] = (i + j) / (2 * target_size)
+        
+        # Add some noise for realism
+        noise = np.random.randn(target_size, target_size) * 0.1
+        img_array += noise
+        img_array = np.clip(img_array, 0, 1).astype(np.float32)
+    
+    return img_array
+
+
 def inpaint_image(model, image, mask, device='cpu'):
     """Perform inpainting on the image using the mask"""
     # Convert to torch tensors **and cast to float32**
@@ -107,6 +130,7 @@ def main():
     parser = argparse.ArgumentParser(description='Inpaint images using trained PConvUNet')
     parser.add_argument('--model', type=str, default='pconv_unet.pth', help='Path to trained model')
     parser.add_argument('--image', type=str, default=None, help='Path to input image (or None for synthetic)')
+    parser.add_argument('--mask', type=str, default=None, help='Path to mask (or None for synthetic)')
     parser.add_argument('--output', type=str, default='inpainted_result.png', help='Path to save output visualization')
     parser.add_argument('--device', type=str, default='cpu', choices=['cpu', 'cuda'], help='Device to use')
     args = parser.parse_args()
@@ -126,9 +150,13 @@ def main():
     image = preprocess_image(args.image)
     print("Image preprocessed")
     
-    # Create mask
-    mask = create_random_mask(image.shape[0])
-    print("Mask created")
+    # Load/create mask
+    mask = preprocess_mask(args.mask)
+    print("Mask preprocessed")
+
+    # # Create mask
+    # mask = create_random_mask(image.shape[0])
+    # print("Mask created")
     
     # Create corrupted image
     corrupted = image * mask
