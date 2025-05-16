@@ -51,21 +51,25 @@ def preprocess_image(image_path, target_size=256):
 
 def inpaint_image(model, image, mask, device='cpu'):
     """Perform inpainting on the image using the mask"""
-    # Convert to torch tensors
-    image_tensor = torch.from_numpy(image).unsqueeze(0).unsqueeze(0).to(device)  # Add batch and channel dims
-    mask_tensor = torch.from_numpy(mask).unsqueeze(0).unsqueeze(0).to(device)
-    
-    # Create corrupted image
-    corrupted_tensor = image_tensor * mask_tensor
-    
-    # Inpaint
+    # Convert to torch tensors **and cast to float32**
+    image_tensor = (
+        torch.from_numpy(image)
+        .unsqueeze(0).unsqueeze(0)   # [B,C,H,W]
+        .float()                     #  <-- add this
+        .to(device)
+    )
+    mask_tensor = (
+        torch.from_numpy(mask)
+        .unsqueeze(0).unsqueeze(0)
+        .float()                     #  <-- and this
+        .to(device)
+    )
+
+    corrupted_tensor = image_tensor * mask_tensor      # stays float32
     with torch.no_grad():
         output = model(corrupted_tensor, mask_tensor)
-    
-    # Convert back to numpy
-    inpainted = output.squeeze().cpu().numpy()
-    
-    return inpainted
+
+    return output.squeeze().cpu().numpy()
 
 def visualize_results(original, mask, corrupted, inpainted, save_path=None):
     """Visualize and optionally save the inpainting results"""
