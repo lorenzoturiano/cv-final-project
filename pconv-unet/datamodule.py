@@ -42,7 +42,7 @@ class InpaintingDataset(Dataset):
             # Applica le trasformazioni specifiche solo all'immagine (es. luminosità/contrasto)
             image = self.image_transform(image=image)["image"]
 
-        mask = torch.from_numpy((mask > 0.5)).float().permute(2, 0, 1)  # Ensure binary
+        mask = torch.from_numpy((mask < 0.5)).float().permute(2, 0, 1)  # Ensure binary
         # Create corrupted image (set holes to 0)
 
         image = image.float() / 255.0  # Normalize to [0, 1]
