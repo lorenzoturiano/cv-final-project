@@ -148,4 +148,4 @@ class StarRemovalDataset(torch.utils.data.Dataset):
         image_with_stars, min_, mean_, std_ = log_norm(image_with_stars, epsilon=1e-3)
         image, _, _, _ = log_norm(image, min_=min_, mean_=mean_, std_=std_, epsilon=1e-3)
 
-        return image_with_stars, image
+        return image_with_stars, image, star_map
