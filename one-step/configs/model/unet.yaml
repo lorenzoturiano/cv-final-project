@@ -1,0 +1,6 @@
+# Model configuration for UNet
+name: unet
+
+# Architecture parameters
+layer_sizes: [16, 32, 64, 64, 128, 256]
+image_channels: 1

@@ -1,0 +1,21 @@
+# @package _global_
+
+defaults:
+  - dataset: default
+  - model: unet
+  - training: default
+  - _self_
+
+# Basic configuration
+working_dir: ${hydra:runtime.cwd}
+results_dir: ${working_dir}/results
+experiment_name: "default"
+
+hydra:
+  job:
+    name: ${experiment_name}
+  run:
+    dir: ${results_dir}/${experiment_name}/${hydra.job.name}
+  sweep:
+    dir: ${results_dir}/${experiment_name}
+    subdir: ${hydra.job.name}
