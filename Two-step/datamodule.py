@@ -13,13 +13,14 @@ import numpy as np
 
 
 class BinarySegmentationDataset(Dataset):
-    def __init__(self, images_dir: str, masks_dir: str, common_transform=None, image_transform=None):
+    def __init__(self, images_dir: str, masks_dir: str, common_transform=None, image_transform=None, mask_divisor = False):
         self.images_dir = images_dir
         self.masks_dir = masks_dir
         self.common_transform = common_transform
         self.image_transform = image_transform
         self.images = sorted(os.listdir(images_dir))
         self.masks = sorted(os.listdir(masks_dir))
+        self.mask_divisor = mask_divisor
 
     def __len__(self):
         return len(self.images)
@@ -41,7 +42,8 @@ class BinarySegmentationDataset(Dataset):
         if self.image_transform:
             # Applica le trasformazioni specifiche solo all'immagine (es. luminosità/contrasto)
             image = self.image_transform(image=image)["image"]
-
+        if self.mask_divisor:
+            mask = mask // 255
         mask = torch.from_numpy((mask > 0.5)).float().permute(2, 0, 1)  # Ensure binary
         return image, mask
 
@@ -55,7 +57,8 @@ class BinarySegmentationDataModule(pl.LightningDataModule):
         transforms: dict,
         batch_size: int = 8,
         num_workers: int = 4,
-        img_size: Tuple[int, int] = (600, 600)
+        img_size: Tuple[int, int] = (600, 600),
+        mask_divisor: bool = False
     ):
         super().__init__()
         self.train_images_dir = train_images_dir
@@ -70,6 +73,7 @@ class BinarySegmentationDataModule(pl.LightningDataModule):
         self.val_common_transform = transforms["val_common"]
         self.train_image_transform = transforms["train_image"]
         self.val_image_transform = transforms["val_image"]
+        self.mask_divisor = mask_divisor
 
         
 
@@ -78,13 +82,15 @@ class BinarySegmentationDataModule(pl.LightningDataModule):
             self.train_images_dir,
             self.train_masks_dir,
             common_transform=self.train_common_transform,
-            image_transform=self.train_image_transform
+            image_transform=self.train_image_transform,
+            mask_divisor= self.mask_divisor
         )
         self.val_dataset = BinarySegmentationDataset(
             self.val_images_dir,
             self.val_masks_dir,
             common_transform=self.val_common_transform,
-            image_transform=self.val_image_transform
+            image_transform=self.val_image_transform,
+            mask_divisor= self.mask_divisor
         )
 
     def train_dataloader(self):

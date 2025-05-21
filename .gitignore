@@ -3,3 +3,5 @@
 dataset/
 cv-env/
 PConv-Keras/
+*.png
+__pycache__/
