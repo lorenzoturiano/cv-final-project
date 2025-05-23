@@ -30,7 +30,8 @@ def loss_fn_rec(x_rec, mask, background,
     # tv = tv_h + tv_w
 
     # oppure
-    diff = (x_rec - background) ** 2
+    # diff = (x_rec - background) ** 2
+    diff = torch.abs(x_rec - background)
     masked_diff = diff * hole
     l2_hole = masked_diff.sum() / hole.sum()
 
@@ -69,8 +70,8 @@ def test_on_val(model, val_loader, device):
         total_loss_seg += loss_seg.item()
         if i >= MAX:
             break
-    avg_loss_rec = total_loss_rec / max(MAX, len(val_loader))
-    avg_loss_seg = total_loss_seg / max(MAX, len(val_loader))
+    avg_loss_rec = total_loss_rec / min(MAX, len(val_loader))
+    avg_loss_seg = total_loss_seg / min(MAX, len(val_loader))
     print(f"Reconstruction Loss: {avg_loss_rec}, Segmentation Loss: {avg_loss_seg}")
     return
 
@@ -85,9 +86,17 @@ if __name__ == "__main__":
     # masks_dir = "../image_generation/generated/masks"
 
 
-    background_dir = "smallreal/backgrounds"
-    images_dir = "smallreal/stretched"
-    masks_dir = "smallreal/masks"
+    # background_dir = "smallRIC/backgrounds"
+    # images_dir = "smallRIC/images"
+    # masks_dir = "smallRIC/masks"
+
+    background_dir = "smallreal2/backgrounds"
+    images_dir = "smallreal2/stretched"
+    masks_dir = "smallreal2/masks"
+
+    val_background_dir = "val_smallRIC/backgrounds"
+    val_images_dir = "val_smallRIC/images"
+    val_masks_dir = "val_smallRIC/masks"
 
     # background_dir = "smalldataset/backgrounds"
     # images_dir = "smalldataset/stretched"
@@ -112,12 +121,12 @@ if __name__ == "__main__":
         train_background_dir=background_dir,
         train_images_dir=images_dir,
         train_masks_dir=masks_dir,
-        # val_background_dir="smalldataset/val_smalldataset/backgrounds",
-        # val_images_dir="smalldataset/val_smalldataset/stretched",
-        # val_masks_dir="smalldataset/val_smalldataset/masks",
-        val_background_dir=background_dir,
-        val_images_dir=images_dir,
-        val_masks_dir=masks_dir,
+        val_background_dir=val_background_dir,
+        val_images_dir=val_images_dir,
+        val_masks_dir=val_masks_dir,
+        # val_background_dir=background_dir,
+        # val_images_dir=images_dir,
+        # val_masks_dir=masks_dir,
 
 
         transforms= {"train_common": None,
@@ -125,8 +134,8 @@ if __name__ == "__main__":
                     "val_common": None,
                     "val_image": None},
         img_size=(384, 384),
-        batch_size=8,
-        num_workers=0,      # SE aumento il numero di workers, va molto più lento
+        batch_size=4,           # MODIFICATO ERA 8
+            num_workers=0,      # SE aumento il numero di workers, va molto più lento
     )
     dm.setup()
     train_loader = dm.train_dataloader()
@@ -140,11 +149,11 @@ if __name__ == "__main__":
     #last best 136 (old version)
     # 9309 quello nuovo
     # MODELLO OTTIMO: 5476, pre reali
-    model.load_state_dict(torch.load("checkpoints/model_418623.pth"))
+    model.load_state_dict(torch.load("checkpoints/model_481197.pth"))
     # freeze the encoder
-    for param in model.encoder.parameters():
-        param.requires_grad = False
-    optimizer = optim.AdamW(model.parameters(), lr=3e-5)
+    # for param in model.encoder.parameters():
+    #     param.requires_grad = False
+    optimizer = optim.AdamW(model.parameters(), lr=2e-5)
 
     # JUST NOW
 
@@ -155,10 +164,10 @@ if __name__ == "__main__":
     # model.reconstruction_head.apply(reset_weights)
     # model.decoder1_rec.apply(reset_weights)
 
-    alpha = 1.0
+    alpha = 0.1
     loss_fn_seg = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(20).to(device))
     name = np.random.randint(0, 1000000)
-    epochs = 5
+    epochs = 10
     for epoch in range(epochs):
         print(f"Epoch {epoch+1}/{epochs}")
         model.train()
@@ -168,7 +177,9 @@ if __name__ == "__main__":
             mask = mask.to(device)
             background = background.to(device)
             x_seg, x_rec = model(image)
-            loss = alpha * loss_fn_seg(x_seg, mask) #+ (1 - alpha) * loss_fn_rec(x_rec, mask, background, lambda_hole=10.0)
+            loss = alpha * loss_fn_seg(x_seg, mask) + (1 - alpha) * loss_fn_rec(x_rec, mask, background, lambda_hole=3.0)
+            # if i == 0:
+            #     print("seg: ", loss_fn_seg(x_seg, mask), "rec: ", loss_fn_rec(x_rec, mask, background, lambda_hole=8.0))
             total_loss += loss.item()
             optimizer.zero_grad()
             loss.backward()
@@ -181,7 +192,7 @@ if __name__ == "__main__":
 
 
     # Test model
-    for i, (background, image, mask) in enumerate(val_loader):            
+    for i, (background, image, mask) in enumerate(val_loader):   
         image = image.to(device)
         mask = mask.to(device)
         background = background.to(device)
@@ -208,7 +219,7 @@ if __name__ == "__main__":
         for j in range(x_seg.shape[0]):
             # x_seg[j] = cv2.GaussianBlur(x_seg[j], (9, 9), 0)[..., np.newaxis]
             x_seg[j] = soft_erosion_mask(x_seg[j], kernel_size=7, sigma=1)
-            # x_rec[j] = cv2.GaussianBlur(x_rec[j], (3, 3), 1)
+            x_rec[j] = cv2.GaussianBlur(x_rec[j], (3, 3), 1)
             noise = np.random.normal(0, 1, size=x_rec[j].shape)  # rumore gaussiano     prima era 5, ora lo metto a 1
             x_rec[j] = np.clip(x_rec[j] + noise, 0, 255)
 

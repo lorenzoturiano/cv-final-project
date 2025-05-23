@@ -6,10 +6,10 @@ from tqdm import tqdm
 
 # === CONFIG ===
 INPUT_IMAGES_DIR = "../output_blob/stretched"
-INPUT_MASKS_DIR = "../output_blob/masks_man"
-INPUT_BACKGROUNDS_DIR = "../output_blob/stretched"
-OUTPUT_DIR = "smallreal"
-N_AUGS = 50
+INPUT_MASKS_DIR = "../output_blob/masks"
+INPUT_BACKGROUNDS_DIR = "../output_blob/inpainted"
+OUTPUT_DIR = "smallreal2"
+N_AUGS = [30, 150]
 
 IMG_DIM = 384
 
@@ -50,7 +50,7 @@ for i in tqdm(range(len(images))):
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)[..., None]
     background = cv2.imread(bg_path, cv2.IMREAD_GRAYSCALE)[..., None]
 
-    for j in range(N_AUGS):
+    for j in range(N_AUGS[i]):
         augmented = common_transforms(image=image, mask=mask, background=background)
         img_aug = augmented["image"]
         mask_aug = augmented["mask"]
