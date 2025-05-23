@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import cv2
 import argparse
 import os
 
@@ -28,13 +29,54 @@ def create_random_mask(image_size, hole_size_range=(20, 80), num_holes=3):
         
     return mask
 
+import numpy as np
+
+def extract_patch(img: np.ndarray, x: int, y: int, patch_size: int) -> np.ndarray:
+    """
+    Return a `patch_size`×`patch_size` patch from `img`, whose top-left corner
+    is at pixel (x, y).
+
+    Parameters
+    ----------
+    img : np.ndarray
+        H×W (grayscale) or H×W×C (color) image array.
+    x, y : int
+        Column (x) and row (y) coordinates of the patch's top-left pixel.
+    patch_size : int
+        Desired side length of the square patch.
+
+    Returns
+    -------
+    np.ndarray
+        A copy of the requested patch.
+
+    Raises
+    ------
+    ValueError
+        If the requested patch would step outside the image bounds.
+    """
+    height, width = img.shape[:2]
+
+    # --- bounds check -------------------------------------------------------
+    if x < 0 or y < 0:
+        raise ValueError("x and y must be non-negative")
+    if x + patch_size > width or y + patch_size > height:
+        raise ValueError(
+            f"Patch ({patch_size}×{patch_size}) starting at ({x}, {y}) "
+            f"does not fit inside image of size {width}×{height}"
+        )
+
+    # --- extract and return -------------------------------------------------
+    patch = img[y : y + patch_size, x : x + patch_size]
+    return patch.copy()
+
+
 def preprocess_image(image_path, target_size=256):
     """Load and preprocess image to grayscale tensor"""
     # Load image
     if image_path:
-        img = Image.open(image_path).convert('L')  # Convert to grayscale
-        img = img.resize((target_size, target_size))
-        img_array = np.array(img) / 255.0  # Normalize to [0, 1]
+        img_array = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        img_array = extract_patch(img_array, x=100, y=100, patch_size=256)
     else:
         # Create a sample gradient image if no image provided
         img_array = np.zeros((target_size, target_size), dtype=np.float32)
@@ -53,10 +95,10 @@ def preprocess_mask(mask_path, target_size=256):
     """Load and preprocess image to grayscale tensor"""
     # Load image
     if mask_path:
-        img = Image.open(mask_path).convert('L')  # Convert to grayscale
-        img = img.resize((target_size, target_size))
-        img_array = np.array(img) / 255.0  # Normalize to [0, 1]
-        img_array = 1.0 - img_array
+        img_array = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+        img_array = ~img_array
+        print(img_array.max(), img_array.min())
+        img_array = extract_patch(img_array, x=100, y=100, patch_size=256)
     else:
         # Create a sample gradient image if no image provided
         img_array = np.zeros((target_size, target_size), dtype=np.float32)
@@ -71,6 +113,33 @@ def preprocess_mask(mask_path, target_size=256):
     
     return img_array
 
+# def invert_mask(mask):
+#     H = mask.shape[0]
+#     W = mask.shape[1]
+#     result = mask.copy()
+
+#     for i in range(H):
+#         for j in range(W):
+#             if mask[i,j] == 0:
+#                 result[i,j] = 0.0
+#             else:
+#                 result[i,j] == image[i,j]
+
+#     return result
+
+def masked_image(image, mask):
+    H = image.shape[0]
+    W = image.shape[1]
+    result = image.copy()
+
+    for i in range(H):
+        for j in range(W):
+            if mask[i,j] == 0:
+                result[i,j] = 0.0
+            else:
+                result[i,j] == image[i,j]
+
+    return result
 
 def inpaint_image(model, image, mask, device='cpu'):
     """Perform inpainting on the image using the mask"""
@@ -81,14 +150,18 @@ def inpaint_image(model, image, mask, device='cpu'):
         .float()                     #  <-- add this
         .to(device)
     )
+    print(image_tensor)
+
     mask_tensor = (
         torch.from_numpy(mask)
         .unsqueeze(0).unsqueeze(0)
         .float()                     #  <-- and this
         .to(device)
     )
+    print(mask_tensor)
 
     corrupted_tensor = image_tensor * mask_tensor      # stays float32
+    
     with torch.no_grad():
         output = model(corrupted_tensor, mask_tensor)
 
@@ -154,12 +227,8 @@ def main():
     mask = preprocess_mask(args.mask)
     print("Mask preprocessed")
 
-    # # Create mask
-    # mask = create_random_mask(image.shape[0])
-    # print("Mask created")
-    
     # Create corrupted image
-    corrupted = image * mask
+    corrupted = masked_image(image, mask)
     
     # Inpaint
     inpainted = inpaint_image(model, image, mask, args.device)
