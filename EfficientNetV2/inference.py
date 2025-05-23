@@ -23,13 +23,7 @@ def loss_fn_rec(x_rec, mask, background,
     gamma = 0.5
     l1_valid = F.l1_loss(x_rec, background)
     l2_valid = F.mse_loss(x_rec, background)
-    # l2_hole = F.mse_loss(x_rec * hole, background * hole)
 
-    # tv_h = torch.mean(torch.abs(x_rec[:, :, 1:, :] - x_rec[:, :, :-1, :]))
-    # tv_w = torch.mean(torch.abs(x_rec[:, :, :, 1:] - x_rec[:, :, :, :-1]))
-    # tv = tv_h + tv_w
-
-    # oppure
     diff = (x_rec - background) ** 2
     masked_diff = diff * hole
     l2_hole = masked_diff.sum() / hole.sum()
@@ -85,11 +79,12 @@ def _load_grayscale( path):
         start_h = np.random.randint(0, h - ch + 1)
         start_w = np.random.randint(0, w - cw + 1)
         img = img[start_h:start_h+ch, start_w:start_w+cw]
+        print(start_h, start_w)
         return img[..., None]  # shape (H, W, 1)
 
 if __name__ == "__main__":
     # load image
-    img_path = r"D:\Documents\AI\II semestre\Computer Vision\v4 project\cv-final-project\output_blob\p47.png"
+    img_path = r"D:\Documents\AI\II semestre\Computer Vision\Backup\cv-final-project\output_blob\p74.png"
     image = _load_grayscale(img_path)
 
 
@@ -103,21 +98,13 @@ if __name__ == "__main__":
     image = torch.from_numpy(image).permute(2, 0, 1)
 
 
-
-
-
-
-
-
-
-
     # Initialize model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = UNetEfficientNetV2().to(device)
     # Load pretrained weights
     #last best 136 (old version)
     # 9309 quello nuovo
-    # MODELLO OTTIMO: 5476, pre reali
+    # MODELLO OTTIMO: 5476
     # ultimo usato: 418623
     # ultimo usato: 481197
     model.load_state_dict(torch.load("checkpoints/model_834639.pth"))

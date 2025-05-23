@@ -1,72 +1,11 @@
 import os
-from typing import Optional, Tuple
+from typing import Tuple
 from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
 from PIL import Image
 import pytorch_lightning as pl
 import torch
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
 import cv2
 import numpy as np
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-
-# class FullDescriptionDataset(Dataset):
-#     def __init__(self, background_dir: str, images_dir: str, masks_dir: str, common_transform=None, image_transform=None, mask_divisor=False):
-#         self.background_dir = background_dir
-#         self.images_dir = images_dir
-#         self.masks_dir = masks_dir
-#         self.common_transform = common_transform
-#         self.image_transform = image_transform
-#         self.backgrounds = sorted(os.listdir(background_dir))
-#         self.images = sorted(os.listdir(images_dir))
-#         self.masks = sorted(os.listdir(masks_dir))
-#         self.mask_divisor = mask_divisor
-
-#     def __len__(self):
-#         return len(self.images)
-
-#     def __getitem__(self, idx):
-#         background_path = os.path.join(self.background_dir, self.backgrounds[idx])
-#         img_path = os.path.join(self.images_dir, self.images[idx])
-#         mask_path = os.path.join(self.masks_dir, self.masks[idx])
-#         background = Image.open(background_path).convert("L")  # grayscale PIL image
-#         image = Image.open(img_path).convert("L")  # grayscale PIL image
-#         mask = Image.open(mask_path).convert("L")  # grayscale PIL image
-
-#         background = np.array(background)[..., None]  # shape (H, W, 1)
-#         image = np.array(image)[..., None]  # shape (H, W, 1)
-#         mask = np.array(mask)[..., None]    # shape (H, W, 1)
-#         if self.common_transform:
-#             augmented = self.common_transform(background=background, image=image, mask=mask)
-#             background = augmented["background"]
-#             image = augmented["image"]
-#             mask = augmented["mask"]
-#         if self.image_transform:
-#             augmented = self.image_transform(background=background, image=image)
-#             background = augmented["background"]
-#             image = augmented["image"]
-
-#         mask = mask.astype(np.float32)/255.0
-#         image = image.astype(np.float32)/255.0
-#         background = background.astype(np.float32)/255.0
-        
-#         image = np.concatenate([image, image, image], axis=-1)  # Convert to 3 channels
-#         # permute image and mask to (C, H, W)
-#         image = np.transpose(image, (2, 0, 1))
-#         mask = np.transpose(mask, (2, 0, 1))
-#         background = np.transpose(background, (2, 0, 1))
-
-#         return background, image, mask
-
-
-
-import cv2
-import numpy as np
-import torch
-from torch.utils.data import Dataset
 
 class FullDescriptionDataset(Dataset):
     def __init__(self, background_dir, images_dir, masks_dir, common_transform=None, image_transform=None, mask_divisor=False):
@@ -188,20 +127,6 @@ if __name__ == "__main__":
     images_dir = "smalldataset/stretched"
     masks_dir = "smalldataset/masks"
 
-
-
-    # common_transforms = A.Compose([
-    #     A.ShiftScaleRotate(p=0.2),
-    #     A.RandomCrop(height=IMG_DIM, width=IMG_DIM),
-    #     A.HorizontalFlip(p=0.5),
-    #     # ToTensorV2()
-    # ], additional_targets={'background': 'image'})
-
-    # # Not for mask
-    # image_transforms = A.Compose([
-    #     A.RandomBrightnessContrast(p=0.2),  # Solo per l'immagine
-    #     # ToTensorV2()
-    # ], additional_targets={'background': 'image'})
 
     # create dataset
     dataset = FullDescriptionDataset(

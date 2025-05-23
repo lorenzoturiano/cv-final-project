@@ -23,17 +23,12 @@ def loss_fn_rec(x_rec, mask, background,
     gamma = 0.5
     l1_valid = F.l1_loss(x_rec, background)
     l2_valid = F.mse_loss(x_rec, background)
-    # l2_hole = F.mse_loss(x_rec * hole, background * hole)
-
-    # tv_h = torch.mean(torch.abs(x_rec[:, :, 1:, :] - x_rec[:, :, :-1, :]))
-    # tv_w = torch.mean(torch.abs(x_rec[:, :, :, 1:] - x_rec[:, :, :, :-1]))
-    # tv = tv_h + tv_w
 
     # oppure
     # diff = (x_rec - background) ** 2
-    diff = torch.abs(x_rec - background)
+    diff = torch.abs(x_rec - background)            # Here I'm using L1 loss
     masked_diff = diff * hole
-    l2_hole = masked_diff.sum() / hole.sum()
+    l2_hole = masked_diff.sum() / hole.sum()    
 
     loss = lambda_valid * (gamma * l1_valid + (1 - gamma) * l2_valid) + lambda_hole * l2_hole       #+ lambda_tv * tv
     return loss

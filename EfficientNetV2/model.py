@@ -20,30 +20,6 @@ class EfficientNetV2Encoder(nn.Module):
                                      std=[0.229, 0.224, 0.225])
 
 
-
-        # # Modifica primo conv per input 1 canale (da 3 a 1)
-        # # Prendiamo la prima conv (features[0]) e cambiamo in_channels=1
-        # old_conv = self.model.features[0][0]
-        # new_conv = nn.Conv2d(
-        #     in_channels=1,
-        #     out_channels=old_conv.out_channels,
-        #     kernel_size=old_conv.kernel_size,
-        #     stride=old_conv.stride,
-        #     padding=old_conv.padding,
-        #     bias=False
-        # )
-        # # Inizializziamo new conv con media pesi canali originali
-        # new_conv.weight.data = old_conv.weight.data.sum(dim=1, keepdim=True)    # I sum for now
-        # self.model.features[0][0] = new_conv
-
-
-        
-        # Useremo vari livelli per skip connection
-        # EfficientNetV2-M ha questi "stages":
-        # features[0], features[1], features[2], features[3], features[4], features[5], features[6]
-        # Usiamo come skip: f0, f1, f2, f3, f4 e output ultimo f6
-
-
     
     def forward(self, x):
 
