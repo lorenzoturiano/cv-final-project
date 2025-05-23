@@ -1,0 +1,135 @@
+
+{
+    "blob_detector": {
+        "star_dimensions": {
+            "extra_small": {
+                "min_threshold": 40,
+                "max_threshold": 255,
+                "threshold_step": 5,
+                "filter_by_area": true,
+                "min_area": 3,
+                "max_area": 20,
+                "filter_by_circularity": true,
+                "min_circularity": 0.8,
+                "filter_by_inertia": false,
+                "min_inertia_ratio": 0.6,
+                "filter_by_convexity": false,
+                "min_convexity": 0.85,
+                "filter_by_color": true,
+                "blob_color": 255,
+                "smoothing": true,
+                "smoothing_params": {
+                    "kernel_size": 3,
+                    "sigma": 1
+                }
+            },
+            "small": {
+                "min_threshold": 70,
+                "max_threshold": 255,
+                "threshold_step": 5,
+                "filter_by_area": true,
+                "min_area": 2,
+                "max_area": 100,
+                "filter_by_circularity": true,
+                "min_circularity": 0.8,
+                "filter_by_inertia": false,
+                "min_inertia_ratio": 0.6,
+                "filter_by_convexity": true,
+                "min_convexity": 0.8,
+                "filter_by_color": true,
+                "blob_color": 255,
+                "smoothing": true,
+                "smoothing_params": {
+                    "kernel_size": 3,
+                    "sigma": 1
+                }
+            },
+            "medium": {
+                "min_threshold": 50,
+                "max_threshold": 255,
+                "threshold_step": 5,
+                "filter_by_area": true,
+                "min_area": 70,
+                "max_area": 500,
+                "filter_by_circularity": true,
+                "min_circularity": 0.85,
+                "filter_by_inertia": false,
+                "min_inertia_ratio": 0.6,
+                "filter_by_convexity": true,
+                "min_convexity": 0.85,
+                "filter_by_color": true,
+                "blob_color": 255,
+                "smoothing": true,
+                "smoothing_params": {
+                    "kernel_size": 5,
+                    "sigma": 0
+                }
+            },
+            "large": {
+                "min_threshold": 60,
+                "max_threshold": 255,
+                "threshold_step": 5,
+                "filter_by_area": true,
+                "min_area": 400,
+                "max_area": 6000,
+                "filter_by_circularity": true,
+                "min_circularity": 0.6,
+                "filter_by_inertia": false,
+                "min_inertia_ratio": 0.8,
+                "filter_by_convexity": false,
+                "min_convexity": 0.6,
+                "filter_by_color": true,
+                "blob_color": 255,
+                "smoothing": true,
+                "smoothing_params": {
+                    "kernel_size": 5,
+                    "sigma": 1
+                }
+            }
+        }
+    },
+    "mask_dilation": {
+        "star_dimensions": {
+            "extra_small": {
+                "kernel_size": 3,
+                "iterations": 2
+            },
+            "small": {
+                "kernel_size": 3,
+                "iterations": 3
+            },
+            "medium": {
+                "kernel_size": 3,
+                "iterations": 4
+            },
+            "large": {
+                "kernel_size": 3,
+                "iterations": 4
+            }
+        }
+    },
+    "inpainting": {
+        "star_dimensions": {
+            "extra_small": {
+                "add": 4,
+                "feather": 0.5,
+                "opacity": 1
+            },
+            "small": {
+                "add": 8,
+                "feather": 0.5,
+                "opacity": 1
+            },
+            "medium": {
+                "add": 15,
+                "feather": 0.5,
+                "opacity": 1
+            },
+            "large": {
+                "add": 15,
+                "feather": 0.5,
+                "opacity": 1
+            }
+        }
+    }
+}
